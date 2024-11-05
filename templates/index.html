@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Mental Health Chatbot</title>
+</head>
+<body onload="stopOngoingSpeech()">
+    <!-- Dark Mode Toggle Button -->
+    <button class="toggle-switch" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+
+    <div class="chat-container">
+        <header>
+            <h1>Mental Health Chatbot</h1>
+        </header>
+        
+        <!-- Bot Animation Section -->
+        <div id="bot-animation" class="bot">
+            <div class="bot-face">
+                <div class="eye left-eye"></div>
+                <div class="eye right-eye"></div>
+                <div class="smile"></div>
+            </div>
+        </div>
+
+        <div id="chat-box">
+            <div id="messages"></div>
+        </div>
+        
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        // Stop any ongoing speech on page load
+        function stopOngoingSpeech() {
+            const synth = window.speechSynthesis;
+            if (synth.speaking) {
+                synth.cancel(); // Stop any ongoing speech
+            }
+        }
+
+        // Function to handle bot's speech and interrupt if new response comes in
+        function speakResponse(responseText) {
+            const synth = window.speechSynthesis;
+            if (synth.speaking) {
+                synth.cancel(); // Stop current speech if it's still speaking
+            }
+            const utterance = new SpeechSynthesisUtterance(responseText);
+            utterance.lang = 'en-US';
+            synth.speak(utterance);
+
+            // Start the animation while the bot is speaking
+            document.getElementById("bot-animation").classList.add("speaking");
+
+            utterance.onend = function() {
+                // Stop animation after the bot has finished speaking
+                document.getElementById("bot-animation").classList.remove("speaking");
+            };
+        }
+
+        $(document).ready(function() {
+            $('#send-button').click(function() {
+                const userMessage = $('#user-input').val();
+                $('#messages').append('<div class="user-message">You: ' + userMessage + '</div>');
+                $('#user-input').val('');
+
+                $.post('/ask', { message: userMessage }, function(data) {
+                    $('#messages').append('<div class="bot-message">Bot: ' + data.response + '</div>');
+                    $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+                    speakResponse(data.response); // Speak the bot's response and animate
+                });
+            });
+
+            $('#user-input').keypress(function(e) {
+                if (e.which == 13) {
+                    $('#send-button').click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
