@@ -5,7 +5,8 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.pipeline import make_pipeline
 
 # Load the dataset
-data = pd.read_csv('mental_health_chatbot.csv')
+data = pd.read_csv('dataset.csv', encoding='latin1')
+
 X = data['Input Message']
 y = data['Response']
 
